@@ -1,0 +1,30 @@
+
+Madek Playground
+================
+
+This project exists for creating prototypes of various features.
+
+At this time you'll need PostgreSQL!
+
+
+I am currently working on factories.
+
+Factories
+---------
+
+See the file `spec/factories.rb`.
+
+
+Examples for usage: 
+
+    FactoryGirl.create :person
+    FactoryGirl.create :group
+
+    DatasetFactory.clear
+
+    DatasetFactory.create
+    DatasetFactory.create :num_groups => 10, :num_people => 1000
+
+
+
+
