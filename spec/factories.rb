@@ -3,9 +3,10 @@ require 'pry'
 
 FactoryGirl.define do
 
-  factory :person do
+  factory :user, :class => Person do
     firstname {Faker::Name.first_name}
     lastname {Faker::Name.last_name}
+    is_user true
     email {"#{firstname}.#{lastname}@example.com".downcase} 
     login {"#{firstname}_#{lastname}".downcase} 
   end
@@ -38,7 +39,7 @@ class DatasetFactory
 
     #binding.pry
 
-    (1..num_people).each{FactoryGirl.create :person}  
+    (1..num_people).each{FactoryGirl.create :user}  
     (1..num_groups).each{FactoryGirl.create :group}
 
     (1..num_groups).each do |i|
