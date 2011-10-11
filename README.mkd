@@ -6,8 +6,18 @@ This project exists for creating prototypes of various features.
 
 At this time you'll need PostgreSQL!
 
+Status
+------
 
-I am currently working on factories.
+The near future goal is to set up executable specifications  for
+rights-management.  I am currently working on factories.
+
+Migrations and Schemas
+----------------------
+
+I don't bother with consistency of migrations. Recreate the
+schema after checkout!
+
 
 Factories
 ---------
