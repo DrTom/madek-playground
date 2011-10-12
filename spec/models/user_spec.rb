@@ -1,9 +1,10 @@
 require 'spec_helper'
 
-describe Group do
+describe User do
 
   it "should be valid when created by default factory" do 
-    (FactoryGirl.create :group).should be_valid 
+    (FactoryGirl.create :user).should be_valid 
   end
+
 
 end

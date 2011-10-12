@@ -4,7 +4,6 @@ Madek Playground
 
 This project exists for creating prototypes of various features.
 
-At this time you'll need PostgreSQL!
 
 Status
 ------
@@ -12,12 +11,22 @@ Status
 The near future goal is to set up executable specifications  for
 rights-management.  I am currently working on factories.
 
-Migrations and Schemas
-----------------------
+Database, Migrations and Schemas
+---------------------------------
+
+At this time you'll need PostgreSQL!
 
 I don't bother with consistency of migrations. Recreate the
-schema after checkout!
+schema after checkout! 
 
+Execute `./script/recreatedb` to set-up the development DB quickly.
+This requires `psql` and others to be in you PATH.
+
+
+### Initial Postgres Setup
+
+* Enter `psql` as a superuser, e.g. _postgres_.
+* `CREATE ROLE rails WITH CREATEDB LOGIN`;
 
 Factories
 ---------
@@ -27,8 +36,8 @@ See the file `spec/factories.rb`.
 
 Examples for usage: 
 
-    FactoryGirl.create :person
-    FactoryGirl.create :group
+    FactoryGirl.create :user
+    FactoryGirl.create :usergroup
 
     DatasetFactory.clear
 

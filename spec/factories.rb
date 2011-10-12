@@ -3,15 +3,14 @@ require 'pry'
 
 FactoryGirl.define do
 
-  factory :user, :class => Person do
+  factory :user do
     firstname {Faker::Name.first_name}
     lastname {Faker::Name.last_name}
-    is_user true
     email {"#{firstname}.#{lastname}@example.com".downcase} 
     login {"#{firstname}_#{lastname}".downcase} 
   end
 
-  factory :group do
+  factory :usergroup do
     name {"group-" + Faker::Internet.domain_word}
   end
    
@@ -25,8 +24,8 @@ class DatasetFactory
 
 
   def self.clear
-    exec_sql "DELETE FROM people;"
-    exec_sql "DELETE FROM groups;"
+    exec_sql "DELETE FROM users;"
+    exec_sql "DELETE FROM usergroups;"
   end
 
 
@@ -37,20 +36,21 @@ class DatasetFactory
     num_people = [ (hash_args[:num_people] or DEF_NUM_PEOPLE), MIN_NUM_PEOPLE].max
     num_groups = [ (hash_args[:num_groups] or num_people/100), MIN_NUM_GOUPS].max
 
-    #binding.pry
 
     (1..num_people).each{FactoryGirl.create :user}  
-    (1..num_groups).each{FactoryGirl.create :group}
+    (1..num_groups).each{FactoryGirl.create :usergroup}
 
     (1..num_groups).each do |i|
 
-      group = Group.find_nth i-1
-      target_group_size =  [ [num_people/(2**i), 3].max, num_people/2 ].min
-      added = 0 
 
-      while group.people.count < target_group_size
-        p = Person.find_random
-        group.people << p unless group.contains_person? p
+      group = Usergroup.find_nth i-1
+      target_group_size =  [ [num_people/(2**i), 3].max, num_people/2 ].min
+
+      #binding.pry
+
+      while group.users.count < target_group_size
+        u = User.find_random
+        group.users << u unless group.contains_user? u
       end
 
     end

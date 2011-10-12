@@ -1,0 +1,4 @@
+#!/bin/bash
+dropdb -U rails madek-playground_development
+createdb -U rails madek-playground_development
+psql -U rails madek-playground_development < db/development_structure.sql
