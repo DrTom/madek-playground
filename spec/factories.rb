@@ -1,5 +1,7 @@
 
-require 'pry' 
+def rbool  
+  0 == (rand 2)
+end
 
 FactoryGirl.define do
 
@@ -13,19 +15,60 @@ FactoryGirl.define do
   factory :usergroup do
     name {"group-" + Faker::Internet.domain_word}
   end
+
+  factory :mediaresource do
+    name {Faker::Name.last_name}
+
+    perm_public_view {rbool}
+    perm_public_download {rbool}
+  end
+
+  # ensure constraints by providing user and mediaresource explicitly
+  factory :userpermissionset do
+    view {rbool}
+    not_view {(not view) and rbool}
+    download {rbool}
+    not_download {(not download) and rbool}
+    edit {rbool}
+    not_edit {(not edit) and rbool}
+
+    user {User.find_random}
+    mediaresource {Mediaresource.find_random}
+  end
+
+  # ensure constraints by providing usergroups and mediaresource explicitly
+  factory :usergrouppermisionset do
+    view {rbool}
+    highres {rbool}
+    edit {rbool}
+
+    usergroup {Usergroup.find_random}
+    mediaresource {Mediaresource.find_random}
+  end
    
 end
 
+
+
 class DatasetFactory
 
-  DEF_NUM_PEOPLE = 100
-  MIN_NUM_PEOPLE = 10
+  DEF_NUM_USERS = 10
+  MIN_NUM_USERS = 4
   MIN_NUM_GOUPS = 3
 
+  def self.recreate *args
+    clear
+    create *args
+  end
 
   def self.clear
     exec_sql "DELETE FROM users;"
     exec_sql "DELETE FROM usergroups;"
+    exec_sql "DELETE FROM mediaresources;"
+    
+    # we don't need these anymore, at least with Postgres
+    # exec_sql "DELETE FROM userpermissionsets;"
+    # exec_sql "DELETE FROM usergrouppermisionsets;"
   end
 
 
@@ -33,26 +76,67 @@ class DatasetFactory
 
     hash_args = ((args and args[0]) or {})
 
-    num_people = [ (hash_args[:num_people] or DEF_NUM_PEOPLE), MIN_NUM_PEOPLE].max
-    num_groups = [ (hash_args[:num_groups] or num_people/100), MIN_NUM_GOUPS].max
+    num_users = [(hash_args[:num_users] or DEF_NUM_USERS), MIN_NUM_USERS].max
+    num_groups =[(hash_args[:num_groups] or num_users/100), MIN_NUM_GOUPS].max
+    num_mediaresources =  (hash_args[:num_mediaresources] or num_users*10)
+    num_userpermissionsets = (hash_args[:num_userpermissionsets] or num_mediaresources * 5)
+    num_usergrouppermissionsets = (hash_args[:num_usergrouppermissionsets] or num_mediaresources * 3)
+
+    # binding.pry
+
+    if num_userpermissionsets > num_users * num_mediaresources
+      raise "You are trying to create more userpermissionsets #{num_userpermissionsets} than possible (#{num_users} * #{num_mediaresources})." 
+    end
+
+    if num_usergrouppermissionsets > num_groups * num_mediaresources
+      raise "You are trying to create more usergrouppermisionsets #{num_usergrouppermissionsets} than possible (#{num_groups} * #{num_mediaresources})." 
+    end
 
 
-    (1..num_people).each{FactoryGirl.create :user}  
+
+    (1..num_users).each{FactoryGirl.create :user}  
     (1..num_groups).each{FactoryGirl.create :usergroup}
 
     (1..num_groups).each do |i|
 
-
       group = Usergroup.find_nth i-1
-      target_group_size =  [ [num_people/(2**i), 3].max, num_people/2 ].min
-
-      #binding.pry
+      target_group_size =  [ [num_users/(2**i), 3].max, num_users/2 ].min
 
       while group.users.count < target_group_size
         u = User.find_random
         group.users << u unless group.contains_user? u
       end
 
+    end
+
+    (1..num_mediaresources).each{FactoryGirl.create :mediaresource}
+
+    (1..num_userpermissionsets).each{create_userpermisionset}
+
+    (1..num_usergrouppermissionsets).each{create_usergrouppermisionset}
+
+  end
+
+
+  # calls itself recursively when fails; 
+  #   stack-overflow ist not a bug but a feature! 
+  #   see the factory definition
+  def self.create_userpermisionset
+    begin
+      FactoryGirl.create :userpermissionset
+    rescue
+      create_userpermisionset
+    end
+  end
+
+  # calls itself recursively when fails; 
+  #   stack-overflow ist not a bug but a feature! 
+  #   see the factory definition
+  def self.create_usergrouppermisionset
+    begin
+      FactoryGirl.create :usergrouppermisionset
+    rescue
+      create_usergrouppermisionset
     end
   end
 
