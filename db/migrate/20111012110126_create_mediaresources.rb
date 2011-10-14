@@ -4,8 +4,8 @@ class CreateMediaresources < ActiveRecord::Migration
 
       t.string :name
 
-      t.boolean :perm_public_view, :default => false
-      t.boolean :perm_public_download, :default => false
+      t.boolean :perm_public_may_view, :default => false
+      t.boolean :perm_public_may_download, :default => false
 
       t.timestamps
     end

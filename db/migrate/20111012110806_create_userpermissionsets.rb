@@ -6,14 +6,14 @@ class CreateUserpermissionsets < ActiveRecord::Migration
       t.references :mediaresource, :null => false
       t.references :user, :null => false
 
-      t.boolean :view, :default => false
-      t.boolean :not_view, :default => false
+      t.boolean :may_view, :default => false
+      t.boolean :maynot_view, :default => false
 
-      t.boolean :download, :default => false
-      t.boolean :not_download, :default => false
+      t.boolean :may_download, :default => false # same as high-res
+      t.boolean :maynot_download, :default => false
 
-      t.boolean :edit, :default => false
-      t.boolean :not_edit, :default => false
+      t.boolean :may_edit_metadata, :default => false 
+      t.boolean :maynot_edit_metadata, :default => false
 
       t.timestamps
     end
@@ -49,5 +49,12 @@ class CreateUserpermissionsets < ActiveRecord::Migration
       CREATE INDEX userpermissionsets_user_id_mediaresource_id_idx on userpermissionsets (user_id, mediaresource_id);
 
     SQL
+
   end
+
+
+  def down
+    drop_table :userpermissionsets
+  end
+
 end

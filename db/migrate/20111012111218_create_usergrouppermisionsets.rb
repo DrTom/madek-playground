@@ -3,29 +3,32 @@ class CreateUsergrouppermisionsets < ActiveRecord::Migration
 
     create_table :usergrouppermisionsets do |t|
 
-      # t.references :mediaresource
-      # t.references :usergroup
+      t.references :mediaresource
+      t.references :usergroup
 
-      t.boolean :view, :default => false
-      t.boolean :download, :default => false
-      t.boolean :edit, :default => false
+      t.boolean :may_view, :default => false
+      t.boolean :may_download, :default => false # high-res
+      t.boolean :may_edit_metadata, :default => false 
 
       t.timestamps
     end
 
     execute <<-SQL
    
-      ALTER TABLE usergrouppermisionsets
-        ADD mediaresource_id integer REFERENCES mediaresources (id) ON DELETE CASCADE;
+      ALTER TABLE usergrouppermisionsets ADD CONSTRAINT usergrouppermisionsets_mediaresources_id_fkey 
+        FOREIGN KEY (mediaresource_id) REFERENCES mediaresources (id) ON DELETE CASCADE; 
+
+      ALTER TABLE usergrouppermisionsets ADD CONSTRAINT usergrouppermisionsets_usergroup_id_fkey 
+        FOREIGN KEY (usergroup_id) REFERENCES usergroups (id) ON DELETE CASCADE; 
 
       CREATE INDEX usergrouppermisionsets_mediaresource_id_idx on usergrouppermisionsets (mediaresource_id);
-
-      ALTER TABLE usergrouppermisionsets
-        ADD usergroup_id integer REFERENCES usergroups (id) ON DELETE CASCADE;
-
       CREATE INDEX usergrouppermisionsets_usergroup_id_idx on usergrouppermisionsets (usergroup_id);
 
     SQL
+  end
+
+  def down
+    drop_table :usergrouppermisionsets
   end
 
 end

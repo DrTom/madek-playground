@@ -29,8 +29,8 @@ SET default_with_oids = false;
 CREATE TABLE mediaresources (
     id integer NOT NULL,
     name character varying(255),
-    perm_public_view boolean DEFAULT false,
-    perm_public_download boolean DEFAULT false,
+    perm_public_may_view boolean DEFAULT false,
+    perm_public_may_download boolean DEFAULT false,
     created_at timestamp without time zone,
     updated_at timestamp without time zone
 );
@@ -70,13 +70,13 @@ CREATE TABLE schema_migrations (
 
 CREATE TABLE usergrouppermisionsets (
     id integer NOT NULL,
-    view boolean DEFAULT false,
-    highres boolean DEFAULT false,
-    edit boolean DEFAULT false,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone,
     mediaresource_id integer,
-    usergroup_id integer
+    usergroup_id integer,
+    may_view boolean DEFAULT false,
+    may_download boolean DEFAULT false,
+    may_edit_metadata boolean DEFAULT false,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
 );
 
 
@@ -148,12 +148,12 @@ CREATE TABLE userpermissionsets (
     id integer NOT NULL,
     mediaresource_id integer NOT NULL,
     user_id integer NOT NULL,
-    view boolean DEFAULT false,
-    not_view boolean DEFAULT false,
-    download boolean DEFAULT false,
-    not_download boolean DEFAULT false,
-    edit boolean DEFAULT false,
-    not_edit boolean DEFAULT false,
+    may_view boolean DEFAULT false,
+    maynot_view boolean DEFAULT false,
+    may_download boolean DEFAULT false,
+    maynot_download boolean DEFAULT false,
+    may_edit_metadata boolean DEFAULT false,
+    maynot_edit_metadata boolean DEFAULT false,
     created_at timestamp without time zone,
     updated_at timestamp without time zone
 );
@@ -347,11 +347,11 @@ CREATE INDEX userpermissionsets_user_id_mediaresource_id_idx ON userpermissionse
 
 
 --
--- Name: usergrouppermisionsets_mediaresource_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: usergrouppermisionsets_mediaresources_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY usergrouppermisionsets
-    ADD CONSTRAINT usergrouppermisionsets_mediaresource_id_fkey FOREIGN KEY (mediaresource_id) REFERENCES mediaresources(id) ON DELETE CASCADE;
+    ADD CONSTRAINT usergrouppermisionsets_mediaresources_id_fkey FOREIGN KEY (mediaresource_id) REFERENCES mediaresources(id) ON DELETE CASCADE;
 
 
 --

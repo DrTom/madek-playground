@@ -3,7 +3,7 @@ class Mediaresource < ActiveRecord::Base
   has_many :userpermissionsets
 
   def can_view? user
-    :not_a_boolean
+    Permissions.can_view? self, user
   end
 
   def can_download? user

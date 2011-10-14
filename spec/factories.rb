@@ -19,18 +19,18 @@ FactoryGirl.define do
   factory :mediaresource do
     name {Faker::Name.last_name}
 
-    perm_public_view {rbool}
-    perm_public_download {rbool}
+    perm_public_may_view {rbool}
+    perm_public_may_download {rbool}
   end
 
   # ensure constraints by providing user and mediaresource explicitly
   factory :userpermissionset do
-    view {rbool}
-    not_view {(not view) and rbool}
-    download {rbool}
-    not_download {(not download) and rbool}
-    edit {rbool}
-    not_edit {(not edit) and rbool}
+    may_view {rbool}
+    maynot_view {(not may_view) and rbool}
+    may_download {rbool}
+    maynot_download {(not may_download) and rbool}
+    may_edit_metadata {rbool}
+    maynot_edit_metadata {(not may_edit_metadata) and rbool}
 
     user {User.find_random}
     mediaresource {Mediaresource.find_random}
@@ -38,9 +38,9 @@ FactoryGirl.define do
 
   # ensure constraints by providing usergroups and mediaresource explicitly
   factory :usergrouppermisionset do
-    view {rbool}
-    highres {rbool}
-    edit {rbool}
+    may_view {rbool}
+    may_download {rbool}
+    may_edit_metadata {rbool}
 
     usergroup {Usergroup.find_random}
     mediaresource {Mediaresource.find_random}
