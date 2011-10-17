@@ -15,6 +15,7 @@ group :development, :test do
   gem 'faker'
   gem 'pry'
   gem 'rspec-rails'
+  gem 'watchr'
   gem 'wirble'
 end
 
