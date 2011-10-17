@@ -15,6 +15,7 @@ module Permissions
   
   end
 
+  
   def self.userpermissionset_disallows what, mediaresource, user 
       (Userpermissionset.count_by_sql %Q@ 
         SELECT count(*) from userpermissionsets 

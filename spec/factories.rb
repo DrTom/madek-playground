@@ -1,6 +1,12 @@
 
-def rbool  
-  0 == (rand 2)
+module FactoryHelper
+
+  def self.rand_bool *opts
+    bias = ((opts and opts[0]) or 0.5)
+    raise "bias must be a real number within [0,1)" if bias < 0.0 or bias >= 1.0
+    (rand < bias) ? true : false
+  end
+
 end
 
 FactoryGirl.define do
@@ -19,18 +25,18 @@ FactoryGirl.define do
   factory :mediaresource do
     name {Faker::Name.last_name}
 
-    perm_public_may_view {rbool}
-    perm_public_may_download {rbool}
+    perm_public_may_view {FactoryHelper.rand_bool}
+    perm_public_may_download {FactoryHelper.rand_bool}
   end
 
   # ensure constraints by providing user and mediaresource explicitly
   factory :userpermissionset do
-    may_view {rbool}
-    maynot_view {(not may_view) and rbool}
-    may_download {rbool}
-    maynot_download {(not may_download) and rbool}
-    may_edit_metadata {rbool}
-    maynot_edit_metadata {(not may_edit_metadata) and rbool}
+    may_view {FactoryHelper.rand_bool 1/4.0}
+    maynot_view {(not may_view) and FactoryHelper.rand_bool}
+    may_download {FactoryHelper.rand_bool 1/4.0}
+    maynot_download {(not may_download) and FactoryHelper.rand_bool}
+    may_edit_metadata {FactoryHelper.rand_bool 1/4.0}
+    maynot_edit_metadata {(not may_edit_metadata) and FactoryHelper.rand_bool}
 
     user {User.find_random}
     mediaresource {Mediaresource.find_random}
@@ -38,9 +44,9 @@ FactoryGirl.define do
 
   # ensure constraints by providing usergroups and mediaresource explicitly
   factory :usergrouppermisionset do
-    may_view {rbool}
-    may_download {rbool}
-    may_edit_metadata {rbool}
+    may_view {FactoryHelper.rand_bool}
+    may_download {FactoryHelper.rand_bool}
+    may_edit_metadata {FactoryHelper.rand_bool}
 
     usergroup {Usergroup.find_random}
     mediaresource {Mediaresource.find_random}
