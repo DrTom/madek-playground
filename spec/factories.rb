@@ -24,13 +24,13 @@ FactoryGirl.define do
 
   factory :mediaresource do
     name {Faker::Name.last_name}
-
-    perm_public_may_view {FactoryHelper.rand_bool}
-    perm_public_may_download {FactoryHelper.rand_bool}
+    owner {User.find_random || (FactoryGirl.create :user)}
+    perm_public_may_view {FactoryHelper.rand_bool 0.1}
+    perm_public_may_download {FactoryHelper.rand_bool 0.1}
   end
 
   # ensure constraints by providing user and mediaresource explicitly
-  factory :userpermissionset do
+  factory :mediaresourceuserpermission do
     may_view {FactoryHelper.rand_bool 1/4.0}
     maynot_view {(not may_view) and FactoryHelper.rand_bool}
     may_download {FactoryHelper.rand_bool 1/4.0}
@@ -38,12 +38,12 @@ FactoryGirl.define do
     may_edit_metadata {FactoryHelper.rand_bool 1/4.0}
     maynot_edit_metadata {(not may_edit_metadata) and FactoryHelper.rand_bool}
 
-    user {User.find_random}
-    mediaresource {Mediaresource.find_random}
+    user {User.find_random || (FactoryGirl.create :user)}
+    mediaresource {Mediaresource.find_random || (FactoryGirl.create :mediaresource)}
   end
 
   # ensure constraints by providing usergroups and mediaresource explicitly
-  factory :usergrouppermisionset do
+  factory :mediaresourcegrouppermission do
     may_view {FactoryHelper.rand_bool}
     may_download {FactoryHelper.rand_bool}
     may_edit_metadata {FactoryHelper.rand_bool}
@@ -68,13 +68,13 @@ class DatasetFactory
   end
 
   def self.clear
+    exec_sql "DELETE FROM mediaresources;"
     exec_sql "DELETE FROM users;"
     exec_sql "DELETE FROM usergroups;"
-    exec_sql "DELETE FROM mediaresources;"
     
     # we don't need these anymore, at least with Postgres
-    # exec_sql "DELETE FROM userpermissionsets;"
-    # exec_sql "DELETE FROM usergrouppermisionsets;"
+    # exec_sql "DELETE FROM mediaresourceuserpermissions;"
+    # exec_sql "DELETE FROM mediaresourcegrouppermissions;"
   end
 
 
@@ -85,17 +85,17 @@ class DatasetFactory
     num_users = [(hash_args[:num_users] or DEF_NUM_USERS), MIN_NUM_USERS].max
     num_groups =[(hash_args[:num_groups] or num_users/100), MIN_NUM_GOUPS].max
     num_mediaresources =  (hash_args[:num_mediaresources] or num_users*10)
-    num_userpermissionsets = (hash_args[:num_userpermissionsets] or num_mediaresources * 5)
+    num_mediaresourceuserpermissions = (hash_args[:num_mediaresourceuserpermissions] or num_mediaresources * 5)
     num_usergrouppermissionsets = (hash_args[:num_usergrouppermissionsets] or num_mediaresources * 3)
 
     # binding.pry
 
-    if num_userpermissionsets > num_users * num_mediaresources
-      raise "You are trying to create more userpermissionsets #{num_userpermissionsets} than possible (#{num_users} * #{num_mediaresources})." 
+    if num_mediaresourceuserpermissions > num_users * num_mediaresources
+      raise "You are trying to create more mediaresourceuserpermissions #{num_mediaresourceuserpermissions} than possible (#{num_users} * #{num_mediaresources})." 
     end
 
     if num_usergrouppermissionsets > num_groups * num_mediaresources
-      raise "You are trying to create more usergrouppermisionsets #{num_usergrouppermissionsets} than possible (#{num_groups} * #{num_mediaresources})." 
+      raise "You are trying to create more mediaresourcegrouppermissions #{num_usergrouppermissionsets} than possible (#{num_groups} * #{num_mediaresources})." 
     end
 
 
@@ -117,9 +117,9 @@ class DatasetFactory
 
     (1..num_mediaresources).each{FactoryGirl.create :mediaresource}
 
-    (1..num_userpermissionsets).each{create_userpermisionset}
+    (1..num_mediaresourceuserpermissions).each{create_mediaresourceuserpermission}
 
-    (1..num_usergrouppermissionsets).each{create_usergrouppermisionset}
+    (1..num_usergrouppermissionsets).each{create_mediaresourcegrouppermission}
 
   end
 
@@ -127,22 +127,22 @@ class DatasetFactory
   # calls itself recursively when fails; 
   #   stack-overflow ist not a bug but a feature! 
   #   see the factory definition
-  def self.create_userpermisionset
+  def self.create_mediaresourceuserpermission
     begin
-      FactoryGirl.create :userpermissionset
+      FactoryGirl.create :mediaresourceuserpermission
     rescue
-      create_userpermisionset
+      create_mediaresourceuserpermission
     end
   end
 
   # calls itself recursively when fails; 
   #   stack-overflow ist not a bug but a feature! 
   #   see the factory definition
-  def self.create_usergrouppermisionset
+  def self.create_mediaresourcegrouppermission
     begin
-      FactoryGirl.create :usergrouppermisionset
+      FactoryGirl.create :mediaresourcegrouppermission
     rescue
-      create_usergrouppermisionset
+      create_mediaresourcegrouppermission
     end
   end
 

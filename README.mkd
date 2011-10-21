@@ -5,11 +5,15 @@ Madek Playground
 This project exists for creating prototypes of various features.
 
 
+
 Status
 ------
 
-The near future goal is to set up executable specifications  for
-rights-management.  I am currently working on factories.
+A basic set of models / executable specifications  for
+rights-management and factories is in place.
+
+I am working on a large scale test to verify the feasibility
+of the model and SQL bindings.
 
 Database, Migrations and Schemas
 ---------------------------------
@@ -17,10 +21,15 @@ Database, Migrations and Schemas
 At this time you'll need PostgreSQL!
 
 I don't bother with consistency of migrations. Recreate the
-schema after checkout! 
+schema after checkout!  Execute 
 
-Execute `./script/recreatedb` to set-up the development DB quickly.
-This requires `psql` and others to be in you PATH.
+    ./script/recreatedb
+
+to set-up the development DB quickly.  This requires `psql` and
+others to be in you PATH. Alternatively try
+
+    rake db:drop db:create db:migrate
+
 
 
 ### Initial Postgres Setup
@@ -34,16 +43,15 @@ Factories
 See the file `spec/factories.rb`.
 
 
-Examples for usage: 
+Tests and Spec
+--------------
 
-    FactoryGirl.create :user
-    FactoryGirl.create :usergroup
+I use RSpec throughout. You can run tests either with 
 
-    DatasetFactory.clear
+    rake spec
 
-    DatasetFactory.create
-    DatasetFactory.create :num_groups => 10, :num_people => 1000
+or preferably continuously  with 
 
-
+    rake watchr
 
 

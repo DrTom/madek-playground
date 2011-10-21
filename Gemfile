@@ -8,6 +8,13 @@ gem 'haml-rails'
 
 gem 'jquery-rails'
 
+# TODO create env for benchmarking
+gem 'factory_girl', "~> 2.1.0"
+gem 'factory_girl_rails', "~> 1.2"
+gem 'faker'
+gem 'statsample'
+
+
 group :development, :test do
   gem 'autotest'
   gem 'factory_girl', "~> 2.1.0"
