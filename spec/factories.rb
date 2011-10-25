@@ -1,6 +1,11 @@
 
 module FactoryHelper
 
+  def self.count_by_sql query
+    res = ActiveRecord::Base.connection.execute query 
+    res.values.flatten.first.to_i 
+  end
+
   def self.rand_bool *opts
     bias = ((opts and opts[0]) or 0.5)
     raise "bias must be a real number within [0,1)" if bias < 0.0 or bias >= 1.0
@@ -82,11 +87,13 @@ class DatasetFactory
 
     hash_args = ((args and args[0]) or {})
 
-    num_users = [(hash_args[:num_users] or DEF_NUM_USERS), MIN_NUM_USERS].max
-    num_groups =[(hash_args[:num_groups] or num_users/100), MIN_NUM_GOUPS].max
-    num_mediaresources =  (hash_args[:num_mediaresources] or num_users*10)
-    num_mediaresourceuserpermissions = (hash_args[:num_mediaresourceuserpermissions] or num_mediaresources * 5)
-    num_usergrouppermissionsets = (hash_args[:num_usergrouppermissionsets] or num_mediaresources * 3)
+    puts num_users = [(hash_args[:num_users] or DEF_NUM_USERS), MIN_NUM_USERS].max
+    puts num_groups =[(hash_args[:num_groups] or num_users/100), MIN_NUM_GOUPS].max
+    puts num_mediaresources =  (hash_args[:num_mediaresources] or num_users*10)
+    puts max_mediaresourceuserpermissions = num_users * num_mediaresources
+    puts num_mediaresourceuserpermissions = (hash_args[:num_mediaresourceuserpermissions] or num_mediaresources * 5)
+    puts max_usergrouppermissionsets = num_groups * num_mediaresources
+    puts num_usergrouppermissionsets = (hash_args[:num_usergrouppermissionsets] or num_mediaresources * 3)
 
     # binding.pry
 
@@ -100,9 +107,16 @@ class DatasetFactory
 
 
 
+    start_time = Time.now
     (1..num_users).each{FactoryGirl.create :user}  
-    (1..num_groups).each{FactoryGirl.create :usergroup}
+    puts "done creating #{User.count} users in #{(Time.now - start_time)} seconds"
 
+    start_time = Time.now
+    (1..num_groups).each{FactoryGirl.create :usergroup}
+    puts "done creating #{Usergroup.count} groups in #{(Time.now - start_time)} seconds"
+
+
+    start_time = Time.now
     (1..num_groups).each do |i|
 
       group = Usergroup.find_nth i-1
@@ -112,16 +126,23 @@ class DatasetFactory
         u = User.find_random
         group.users << u unless group.contains_user? u
       end
-
     end
+    puts "done adding #{FactoryHelper.count_by_sql %Q@ SELECT count(*) from usergroups_users@} usergroups_users relations in #{(Time.now - start_time)} seconds"
 
+    start_time = Time.now
     (1..num_mediaresources).each{FactoryGirl.create :mediaresource}
+    puts "done creating #{Mediaresource.count} Mediaresources in #{(Time.now - start_time)} seconds"
 
+    start_time = Time.now
     (1..num_mediaresourceuserpermissions).each{create_mediaresourceuserpermission}
+    puts "done creating #{Mediaresourceuserpermission.count} mediaresourceuserpermissions in #{(Time.now - start_time)} seconds"
 
+    start_time = Time.now
     (1..num_usergrouppermissionsets).each{create_mediaresourcegrouppermission}
+    puts "done creating #{Mediaresourcegrouppermission.count} mediaresourcegrouppermissions in #{(Time.now - start_time)} seconds"
 
   end
+
 
 
   # calls itself recursively when fails; 
@@ -146,9 +167,10 @@ class DatasetFactory
     end
   end
 
-
   def self.exec_sql sql_statement
      ActiveRecord::Base.connection.execute sql_statement
   end
+
+
 
 end

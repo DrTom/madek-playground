@@ -1,0 +1,8 @@
+
+
+* done creating 10000 users in 16.707397 seconds
+* done creating 500 groups in 0.920326 seconds
+* done adding 11459 usergroups_users relations in 127.384968 seconds
+* done creating 1000000 Mediaresources in 2554.708182 seconds
+* done creating 5000000 mediaresourceuserpermissions in 50094.285993 seconds
+* done creating 3000000 mediaresourcegrouppermissions in 16026.36534 seconds
