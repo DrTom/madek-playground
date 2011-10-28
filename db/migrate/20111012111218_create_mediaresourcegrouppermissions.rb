@@ -3,8 +3,8 @@ class CreateMediaresourcegrouppermissions < ActiveRecord::Migration
 
     create_table :mediaresourcegrouppermissions do |t|
 
-      t.references :mediaresource
-      t.references :usergroup
+      t.references :mediaresource, :null => false
+      t.references :usergroup, :null => false
 
       t.boolean :may_view, :default => false
       t.boolean :may_download, :default => false # high-res
@@ -14,7 +14,7 @@ class CreateMediaresourcegrouppermissions < ActiveRecord::Migration
     end
 
     execute <<-SQL
-   
+
       ALTER TABLE mediaresourcegrouppermissions ADD CONSTRAINT mediaresourcegrouppermissions_mediaresources_id_fkey 
         FOREIGN KEY (mediaresource_id) REFERENCES mediaresources (id) ON DELETE CASCADE; 
 

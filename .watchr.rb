@@ -1,10 +1,12 @@
 
 def growl(message)
+
   growlnotify = `which growlnotify`.chomp
   title = "Watchr Test Results"
   image = message.include?('0 failures, 0 errors') ? "~/.watchr_images/passed.png" : "~/.watchr_images/failed.png"
   options = "-w -n Watchr --image '#{File.expand_path(image)}' -m '#{message}' '#{title}'"
   system %(#{growlnotify} #{options} &)
+
 end
 
 def run_spec(file)
@@ -14,7 +16,7 @@ def run_spec(file)
   end
 
   puts "Running #{file}"
-  system "bundle exec rspec #{file}"
+  system "rake spec SPEC=#{file}"
   puts
 end
 

@@ -12,20 +12,39 @@ module FactoryHelper
     (rand < bias) ? true : false
   end
 
+  def self.execute_sql query
+    ActiveRecord::Base.connection.execute query 
+  end
+
 end
 
 FactoryGirl.define do
 
-  factory :user do
-    firstname {Faker::Name.first_name}
-    lastname {Faker::Name.last_name}
-    email {"#{firstname}.#{lastname}@example.com".downcase} 
-    login {"#{firstname}_#{lastname}".downcase} 
+  factory :collection do
+    name {Faker::Name.last_name}
+    owner {User.find_random || (FactoryGirl.create :user)}
+    perm_public_may_view_metadata {FactoryHelper.rand_bool 0.1}
   end
 
-  factory :usergroup do
-    name {"group-" + Faker::Internet.domain_word}
+  factory :collectionuserpermission do
+    may_view_metadata {FactoryHelper.rand_bool 1/4.0}
+    maynot_view_metadata {(not may_view_metadata) and FactoryHelper.rand_bool}
+    may_edit_metadata {FactoryHelper.rand_bool 1/4.0}
+    maynot_edit_metadata {(not may_edit_metadata) and FactoryHelper.rand_bool}
+
+    user {User.find_random || (FactoryGirl.create :user)}
+    collection {Collection.find_random || (FactoryGirl.create :collection)}
   end
+
+
+  factory :collectiongrouppermission do
+    may_view_metadata {FactoryHelper.rand_bool 1/4.0}
+    may_edit_metadata {FactoryHelper.rand_bool 1/4.0}
+
+    usergroup {Usergroup.find_random || (FactoryGirl.create :usergroup)}
+    collection {Collection.find_random || (FactoryGirl.create :collection)}
+  end
+
 
   factory :mediaresource do
     name {Faker::Name.last_name}
@@ -34,7 +53,6 @@ FactoryGirl.define do
     perm_public_may_download {FactoryHelper.rand_bool 0.1}
   end
 
-  # ensure constraints by providing user and mediaresource explicitly
   factory :mediaresourceuserpermission do
     may_view {FactoryHelper.rand_bool 1/4.0}
     maynot_view {(not may_view) and FactoryHelper.rand_bool}
@@ -47,16 +65,26 @@ FactoryGirl.define do
     mediaresource {Mediaresource.find_random || (FactoryGirl.create :mediaresource)}
   end
 
-  # ensure constraints by providing usergroups and mediaresource explicitly
   factory :mediaresourcegrouppermission do
     may_view {FactoryHelper.rand_bool}
     may_download {FactoryHelper.rand_bool}
     may_edit_metadata {FactoryHelper.rand_bool}
 
-    usergroup {Usergroup.find_random}
-    mediaresource {Mediaresource.find_random}
+    usergroup {Usergroup.find_random || (FactoryGirl.create :usergroup)}
+    mediaresource {Mediaresource.find_random || (FactoryGirl.create :mediaresource)}
   end
    
+  factory :user do
+    firstname {Faker::Name.first_name}
+    lastname {Faker::Name.last_name}
+    email {"#{firstname}.#{lastname}@example.com".downcase} 
+    login {"#{firstname}_#{lastname}".downcase} 
+  end
+
+  factory :usergroup do
+    name {"group-" + Faker::Internet.domain_word}
+  end
+
 end
 
 
@@ -74,6 +102,7 @@ class DatasetFactory
 
   def self.clear
     exec_sql "DELETE FROM mediaresources;"
+    exec_sql "DELETE FROM collections;"
     exec_sql "DELETE FROM users;"
     exec_sql "DELETE FROM usergroups;"
     
@@ -89,11 +118,17 @@ class DatasetFactory
 
     puts num_users = [(hash_args[:num_users] or DEF_NUM_USERS), MIN_NUM_USERS].max
     puts num_groups =[(hash_args[:num_groups] or num_users/100), MIN_NUM_GOUPS].max
+
     puts num_mediaresources =  (hash_args[:num_mediaresources] or num_users*10)
-    puts max_mediaresourceuserpermissions = num_users * num_mediaresources
+    #puts max_mediaresourceuserpermissions = num_users * num_mediaresources
     puts num_mediaresourceuserpermissions = (hash_args[:num_mediaresourceuserpermissions] or num_mediaresources * 5)
-    puts max_usergrouppermissionsets = num_groups * num_mediaresources
+    #puts max_usergrouppermissionsets = num_groups * num_mediaresources
     puts num_usergrouppermissionsets = (hash_args[:num_usergrouppermissionsets] or num_mediaresources * 3)
+
+    puts num_collections = [(hash_args[:num_collections] or num_mediaresources/1000).floor,10].max
+    puts num_collectionuserpermissions = (hash_args[:num_collectionuserpermissions] or num_collections * 5)
+    puts num_collectiongroupppermissionsets = (hash_args[:num_collectiongroupppermissionsets] or num_collections * 3)
+
 
     # binding.pry
 
@@ -129,6 +164,9 @@ class DatasetFactory
     end
     puts "done adding #{FactoryHelper.count_by_sql %Q@ SELECT count(*) from usergroups_users@} usergroups_users relations in #{(Time.now - start_time)} seconds"
 
+
+    ### Mediaresouce
+     
     start_time = Time.now
     (1..num_mediaresources).each{FactoryGirl.create :mediaresource}
     puts "done creating #{Mediaresource.count} Mediaresources in #{(Time.now - start_time)} seconds"
@@ -140,6 +178,37 @@ class DatasetFactory
     start_time = Time.now
     (1..num_usergrouppermissionsets).each{create_mediaresourcegrouppermission}
     puts "done creating #{Mediaresourcegrouppermission.count} mediaresourcegrouppermissions in #{(Time.now - start_time)} seconds"
+
+    ### Collection
+     
+    start_time = Time.now
+    (1..num_collections).each{FactoryGirl.create :collection}
+    puts "done creating #{Collection.count} Collections in #{(Time.now - start_time)} seconds"
+
+    start_time = Time.now
+    (1..num_collectionuserpermissions).each{create_collectionuserpermission}
+    puts "done creating #{Collectionuserpermission.count} Collectionuserpermissions in #{(Time.now - start_time)} seconds"
+
+    start_time = Time.now
+    (1..num_usergrouppermissionsets).each{create_collectiongrouppermission}
+    puts "done creating #{Mediaresourcegrouppermission.count} Collectionuserpermissions in #{(Time.now - start_time)} seconds"
+
+
+    ### Collections-Mediaresources
+
+    start_time = Time.now
+    (1..Collection.count).each do |i|
+
+      collection = Collection.find_nth i-1
+      target_collection_size =  [Mediaresource.count/(2**i), 3].max
+
+      (1..target_collection_size).each do
+        mr = Mediaresource.find_random
+        collection.mediaresources << mr unless collection.contains_mediaresource? mr
+      end
+
+    end
+    puts "done adding #{FactoryHelper.count_by_sql %Q@ SELECT count(*) from collections_mediaresources@} collections_mediaresources in #{(Time.now - start_time)} seconds"
 
   end
 
@@ -166,6 +235,25 @@ class DatasetFactory
       create_mediaresourcegrouppermission
     end
   end
+
+
+  def self.create_collectionuserpermission
+    begin
+      FactoryGirl.create :collectionuserpermission
+    rescue
+      create_collectionuserpermission
+    end
+  end
+
+  def self.create_collectiongrouppermission
+    begin
+      FactoryGirl.create :collectiongrouppermission
+    rescue
+      create_collectiongrouppermission
+    end
+  end
+
+
 
   def self.exec_sql sql_statement
      ActiveRecord::Base.connection.execute sql_statement
