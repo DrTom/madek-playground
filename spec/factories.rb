@@ -89,7 +89,7 @@ end
 
 
 
-class DatasetFactory
+module DatasetFactory
 
   DEF_NUM_USERS = 10
   MIN_NUM_USERS = 4
@@ -110,6 +110,33 @@ class DatasetFactory
     # exec_sql "DELETE FROM mediaresourceuserpermissions;"
     # exec_sql "DELETE FROM mediaresourcegrouppermissions;"
   end
+
+
+ 
+  module Collection_DAG
+
+    def self.create_square depth
+      prevrow = []
+      thisrow = []
+      (1..depth).each do |i|
+        (1..depth).each do |j|
+          node = FactoryGirl.create :collection, :name => "#{i}_#{j}"
+          prevrow.each do |dec| 
+            dec.children << node
+          end
+          thisrow.each do |dec|
+            dec.children << node
+          end
+          thisrow << node
+        end
+        prevrow = thisrow
+        thisrow = []
+      end
+      
+    end
+  end
+
+
 
 
   def self.create *args

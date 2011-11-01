@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-<title>Report 2011-10-25 14:49:16 +0200</title>
+<title>Report 2011-10-31 10:12:38 +0100</title>
         <style>
         body {
           margin:0;
@@ -21,37 +21,44 @@
         </style>
 
 </head><body>
-<h1>Report 2011-10-25 14:49:16 +0200</h1><div id='toc'><div class='title'>List of contents</div>
+<h1>Report 2011-10-31 10:12:38 +0100</h1><div id='toc'><div class='title'>List of contents</div>
 <ul>
-<li><a href='#toc_1'>Dataset</a></li>
-<li><a href='#toc_2'>Querytimes</a></li>
+<li><a href='#toc_1'>Size of Database</a></li>
+<li><a href='#toc_2'>Query Times Cold/Warm</a></li>
+<li><a href='#toc_3'>Query Times Hot</a></li>
 </ul>
 </div>
-<div class='tot'><div class='title'>List of tables</div><ul><li><a href='#table_1'>Number of Objects in Dataset</a></li><li><a href='#table_2'>can_viwe?, samples in milliseconds</a></li></ul></div>
-  <div class='section'><h2>Dataset</h2><a name='toc_1'></a>
-    <a name='table_1'></a><table><caption>Number of Objects in Dataset</caption><thead><th>Object</th><th>Items</th></thead>
+<div class='tot'><div class='title'>List of tables</div><ul><li><a href='#table_1'>Number of Objects in Dataset</a></li><li><a href='#table_2'>can_viwe?(mediaresource,ueser) [milliseconds]</a></li><li><a href='#table_3'>can_viwe?(mediaresource,ueser) [milliseconds]</a></li></ul></div>
+  <div class='section'><h2>Size of Database</h2><a name='toc_1'></a>
+  </div>
+  <a name='table_1'></a><table><caption>Number of Objects in Dataset</caption><thead><th>Object</th><th>Items</th></thead>
 <tbody>
 <tr><td>Users</td><td>10000</td></tr>
-<tr><td>Mediaresources</td><td>1000000</td></tr>
 <tr><td>Groups</td><td>500</td></tr>
 <tr><td>User-Group Relations</td><td>11459</td></tr>
+<tr><td>Mediaresources</td><td>1000000</td></tr>
 <tr><td>Mediaresource-Userpermissions</td><td>5000000</td></tr>
 <tr><td>Mediaresource-Grouppermissions</td><td>3000000</td></tr>
+<tr><td>Collections</td><td>1000</td></tr>
+<tr><td>Collection-Userpermissions</td><td>5000</td></tr>
+<tr><td>Collection-Grouppermissions</td><td>3000000</td></tr>
 </tbody>
 </table>
 
+  <div class='section'><h2>Query Times Cold/Warm</h2><a name='toc_2'></a>
   </div>
-  <div class='section'><h2>Querytimes</h2><a name='toc_2'></a>
-    <a name='table_2'></a><table><caption>can_viwe?, samples in milliseconds</caption><thead><th>property</th><th>value</th></thead>
+
+  <div class='section'><h2>Query Times Hot</h2><a name='toc_3'></a>
+  </div>
+  <a name='table_3'></a><table><caption>can_viwe?(mediaresource,ueser) [milliseconds]</caption><thead><th>property</th><th>value</th></thead>
 <tbody>
 <tr><td>number of samples</td><td>1000</td></tr>
-<tr><td>median</td><td>2.2790000000000004</td></tr>
-<tr><td>mean</td><td>2.205153000000003</td></tr>
-<tr><td>std. deviation</td><td>1.8937374769463124</td></tr>
-<tr><td>min</td><td>0.5599999999999999</td></tr>
-<tr><td>max</td><td>44.607</td></tr>
+<tr><td>median</td><td>2.004</td></tr>
+<tr><td>mean</td><td>2.0239979999999997</td></tr>
+<tr><td>std. deviation</td><td>2.664564650744285</td></tr>
+<tr><td>min</td><td>0.508</td></tr>
+<tr><td>max</td><td>44.824000000000005</td></tr>
 </tbody>
 </table>
 
-  </div>
 </body></html>

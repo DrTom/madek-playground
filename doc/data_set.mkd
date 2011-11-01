@@ -1,8 +1,11 @@
 
-
-* done creating 10000 users in 16.707397 seconds
-* done creating 500 groups in 0.920326 seconds
-* done adding 11459 usergroups_users relations in 127.384968 seconds
-* done creating 1000000 Mediaresources in 2554.708182 seconds
-* done creating 5000000 mediaresourceuserpermissions in 50094.285993 seconds
-* done creating 3000000 mediaresourcegrouppermissions in 16026.36534 seconds
+% done creating 10000 users in 16.787702 seconds
+% done creating 500 groups in 0.732196 seconds
+% done adding 11459 usergroups_users relations in 142.067411 seconds
+% done creating 1000000 Mediaresources in 2522.424423 seconds
+% done creating 5000000 mediaresourceuserpermissions in 49658.443446 seconds
+% done creating 3000000 mediaresourcegrouppermissions in 15866.876973 seconds
+% done creating 1000 Collections in 2.670053 seconds
+% done creating 5000 Collectionuserpermissions in 24.517982 seconds
+% done creating 3000000 Collectionuserpermissions in 11227.711896 seconds
+% done adding 857161 collections_mediaresources in 4912.736729 seconds

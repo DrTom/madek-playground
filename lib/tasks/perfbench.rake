@@ -18,9 +18,72 @@ module StopWatch
 
 end
 
+module Report
+
+  def self.dataset_table
+    ReportBuilder::Table.new :name => "Number of Objects in Dataset", :header => %w{Object Items} do
+      row ["Users", User.count]
+      row ["Groups", Usergroup.count]
+      row ["User-Group Relations", (FactoryHelper.count_by_sql "select count(*) from usergroups_users;") ]
+      row ["Mediaresources", Mediaresource.count]
+      row ["Mediaresource-Userpermissions", Mediaresourceuserpermission.count ]
+      row ["Mediaresource-Grouppermissions", Mediaresourcegrouppermission.count ]
+      row ["Collections", Collection.count]
+      row ["Collection-Userpermissions", Collectionuserpermission.count ]
+      row ["Collection-Grouppermissions", Collectiongrouppermission.count ]
+    end
+  end
+
+
+
+  # TODO generalize to summary
+  def self.mr_can_view_table v
+
+    ReportBuilder::Table.new :name => "can_viwe?(mediaresource,user) [milliseconds]", :header => %w{property value} do
+      row ["number of samples", v.size]
+      row ["median", v.median]
+      row ["mean", v.mean]
+      row ["std. deviation", v.sdp]
+      row ["min",v.min]
+      row ["max", v.max]
+    end
+
+  end
+end
+
+
+module Benchmark
+
+  NUM_HEATUPS = 10;
+
+  def self.mr_can_view
+      arr = []
+      (1.. 1000 + NUM_HEATUPS).each do |i| 
+        user = User.find_random
+        mr = Mediaresource.find_random
+        StopWatch.stop_time(i > NUM_HEATUPS ? arr : nil) {Permissions.can_view? mr, user}
+      end
+      arr.to_scale
+  end
+
+  def self.heatup
+    execute_sql %Q@ 
+      EXPLAIN ANALYZE SELECT * from mediaresources;
+      EXPLAIN ANALYZE SELECT * from mediaresourcegrouppermissions;
+      EXPLAIN ANALYZE SELECT * from mediaresourceuserpermissions;
+      EXPLAIN ANALYZE SELECT * from users;
+      EXPLAIN ANALYZE SELECT * from usergroups;
+      EXPLAIN ANALYZE SELECT * from usergroups_users;
+    @
+  end
+
+  def self.execute_sql query
+    ActiveRecord::Base.connection.execute query 
+  end
+
+end
 
 namespace :perfbench do
-
 
   desc "Cleans and recreates all data"
   task :recreate_dataset => :environment do
@@ -34,51 +97,20 @@ namespace :perfbench do
   desc "Run peformance test that stresses the db and verifies efficiency of queries"
   task :queries => :environment do
 
-    num_heatups = 10;
-    arr = []
-    (1.. 1000 + num_heatups).each do |i| 
-      user = User.find_random
-      mr = Mediaresource.find_random
-      StopWatch.stop_time(i > num_heatups ? arr : nil) {Permissions.can_view? mr, user}
-    end
-
-
-    v = arr.to_scale
-    puts "Permissions.can_view? in milliseconds"
-    puts "median #{v.median}"
-    puts "mean #{v.mean}"
-    puts "sdp #{v.sdp}"
-    puts "min #{v.min}"
-    puts "max #{v.max}"
-    puts v.summary
-
     #binding.pry
   
-    rb=ReportBuilder.new do
-      section :name => "Dataset"  do
-        table :name => "Number of Objects in Dataset", :header => %w{Object Items} do
-          row ["Users", User.count]
-          row ["Mediaresources", Mediaresource.count]
-          row ["Groups", Usergroup.count]
-          row ["User-Group Relations", (FactoryHelper.count_by_sql "select count(*) from usergroups_users;") ]
-          row ["Mediaresource-Userpermissions", Mediaresourceuserpermission.count ]
-          row ["Mediaresource-Grouppermissions", Mediaresourcegrouppermission.count ]
-        end
-      end
-      section :name => "Querytimes" do
-        table :name => "can_viwe?, samples in milliseconds", :header => %w{property value} do
-          row ["number of samples", v.size]
-          row ["median", v.median]
-          row ["mean", v.mean]
-          row ["std. deviation", v.sdp]
-          row ["min",v.min]
-          row ["max", v.max]
-        end
-      end
-    end
-    #rb.add(Statsample::Graph::Boxplot.new(:vectors=>[v]))
+    rb=ReportBuilder.new 
+    rb.add ReportBuilder::Section.new(:name => "Size of Database") 
+    rb.add Report.dataset_table
+    rb.add ReportBuilder::Section.new :name => "Query Times Cold/Warm"
+    rb.add Report.mr_can_view_table Benchmark.mr_can_view
+    Benchmark.heatup
+    rb.add ReportBuilder::Section.new :name => "Query Times Hot"
+    rb.add Report.mr_can_view_table Benchmark.mr_can_view
+
     rb.save_html('doc/perfbench/queries.html')
 
   end
 
 end
+

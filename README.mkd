@@ -55,3 +55,12 @@ or preferably continuously  with
     rake watchr
 
 
+
+Performance Tests
+-----------------
+
+1. (Re)Create the dataset, takes +24 hrs with std. PC:  `RAILS_ENV=production rake perfbench:recreate_dataset`.
+
+2. Restart machine, then: `RAILS_ENV=production rake perfbench:queries`.
+
+See `doc/perfbench/queries.html` for results.

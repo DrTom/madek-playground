@@ -24,6 +24,102 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 SET search_path = public, pg_catalog;
 
+--
+-- Name: ensure_dag_property_on_insert(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ensure_dag_property_on_insert() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+      DECLARE
+        cycle boolean = false;
+      BEGIN
+
+        if exists (select 1 from pg_tables where tablename = 'ancestors') THEN 
+          RAISE 'temporary table ancestors exists already'; 
+        END IF;
+        if exists (select 1 from pg_tables where tablename = 'descendants') THEN 
+          RAISE 'temporary table descendants exists already'; 
+        END IF;
+        CREATE TEMP TABLE ancestors (id integer NOT NULL UNIQUE);
+        CREATE TEMP TABLE descendants (id integer NOT NULL UNIQUE);
+
+        PERFORM find_ancestors(NEW.parent_id);
+        PERFORM find_descendants(NEW.child_id);
+
+        cycle :=  Exists (SELECT * from descendants INTERSECT SELECT * from ancestors);
+
+        DROP TABLE ancestors;
+        DROP TABLE descendants;
+
+        IF cycle THEN
+          RAISE 'inserting this edge would introduce a circular structure';
+          RETURN NULL;
+        ELSE
+          RETURN NEW;
+        END IF;
+
+      END $$;
+
+
+--
+-- Name: ensure_no_2nodeloop_on_insert(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION ensure_no_2nodeloop_on_insert() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    DECLARE
+    BEGIN
+      if EXISTS (SELECT * from collections_parent_child_joins WHERE parent_id = NEW.child_id and child_id = NEW.parent_id ) THEN
+        RAISE 'the inverse edge exists already'; 
+        RETURN NULL;
+      ELSE
+        RETURN NEW;
+      END IF;
+    END $$;
+
+
+--
+-- Name: find_ancestors(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION find_ancestors(integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+      DECLARE
+        crow record;
+      BEGIN
+        FOR crow IN SELECT parent_id FROM collections_parent_child_joins WHERE child_id = $1 LOOP
+          IF (SELECT count(*) from ancestors WHERE id = crow.parent_id) = 0 THEN
+            INSERT into ancestors (id) values (crow.parent_id);
+            PERFORM find_ancestors(crow.parent_id);
+          END IF;
+        END LOOP;
+      RETURN;
+      END $_$;
+
+
+--
+-- Name: find_descendants(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION find_descendants(integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $_$
+      DECLARE
+        crow record;
+      BEGIN
+        FOR crow IN SELECT child_id FROM collections_parent_child_joins WHERE parent_id = $1 LOOP
+          IF (SELECT count(*) from descendants WHERE id = crow.child_id) = 0 THEN
+            INSERT into descendants (id) values (crow.child_id);
+            PERFORM find_descendants(crow.child_id);
+          END IF;
+        END LOOP;
+      RETURN;
+      END $_$;
+
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -111,7 +207,8 @@ CREATE TABLE collections_mediaresources (
 
 CREATE TABLE collections_parent_child_joins (
     parent_id integer NOT NULL,
-    child_id integer NOT NULL
+    child_id integer NOT NULL,
+    CONSTRAINT no_self_reference CHECK ((parent_id <> child_id))
 );
 
 
@@ -580,6 +677,20 @@ CREATE INDEX user_usergroup_idx ON usergroups_users USING btree (user_id, usergr
 
 
 --
+-- Name: ensure_dag_property_trigger; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ensure_dag_property_trigger BEFORE INSERT OR UPDATE ON collections_parent_child_joins FOR EACH ROW EXECUTE PROCEDURE ensure_dag_property_on_insert();
+
+
+--
+-- Name: ensure_no_2nodeloop_on_insert; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER ensure_no_2nodeloop_on_insert BEFORE INSERT OR UPDATE ON collections_parent_child_joins FOR EACH ROW EXECUTE PROCEDURE ensure_no_2nodeloop_on_insert();
+
+
+--
 -- Name: collection_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -732,3 +843,7 @@ INSERT INTO schema_migrations (version) VALUES ('20111026084623');
 INSERT INTO schema_migrations (version) VALUES ('20111026104950');
 
 INSERT INTO schema_migrations (version) VALUES ('20111028111742');
+
+INSERT INTO schema_migrations (version) VALUES ('20111101122431');
+
+INSERT INTO schema_migrations (version) VALUES ('20111101130715');
