@@ -24,6 +24,9 @@ class CreateMediaresourcegrouppermissions < ActiveRecord::Migration
       CREATE INDEX mediaresourcegrouppermissions_mediaresource_id_idx on mediaresourcegrouppermissions (mediaresource_id);
       CREATE INDEX mediaresourcegrouppermissions_usergroup_id_idx on mediaresourcegrouppermissions (usergroup_id);
 
+      CREATE INDEX mediaresourcegrouppermissions_may_view_idx ON mediaresourcegrouppermissions (may_view);
+
+
     SQL
   end
 

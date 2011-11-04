@@ -13,8 +13,13 @@ class CreateMediaresources < ActiveRecord::Migration
     end
 
     execute <<-SQL
+
       ALTER TABLE mediaresources ADD CONSTRAINT mediaresource_owner_id_fkey 
         FOREIGN KEY (owner_id) REFERENCES users (id); 
+
+      CREATE INDEX mediaresources_perm_public_may_view_idx ON mediaresources (perm_public_may_view);
+      CREATE INDEX mediaresources_owner_id_idx ON mediaresources (owner_id);
+
     SQL
 
   end

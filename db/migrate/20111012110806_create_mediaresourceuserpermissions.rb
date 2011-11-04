@@ -37,6 +37,9 @@ class CreateMediaresourceuserpermissions < ActiveRecord::Migration
       ALTER TABLE mediaresourceuserpermissions ADD CONSTRAINT mediaresourceuserpermissions_user_id_mediaresource_id_unique 
         UNIQUE (user_id, mediaresource_id);
 
+      CREATE INDEX mediaresourceuserpermissions_may_view_idx ON mediaresourceuserpermissions (may_view);
+      CREATE INDEX mediaresourceuserpermissions_maynot_view_idx ON mediaresourceuserpermissions (maynot_view);
+
       -- TODO check if we really don't need any of:
       -- CREATE INDEX mediaresourceuserpermissions_mediaresources_id_user_id_view_idx on mediaresourceuserpermissions (view);
       -- CREATE INDEX mediaresourceuserpermissions_not_view_idx on mediaresourceuserpermissions (not_view);

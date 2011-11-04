@@ -356,6 +356,30 @@ ALTER SEQUENCE mediaresourceuserpermissions_id_seq OWNED BY mediaresourceuserper
 
 
 --
+-- Name: users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE users (
+    id integer NOT NULL,
+    firstname character varying(255),
+    lastname character varying(255),
+    login character varying(40),
+    email character varying(100),
+    usage_terms_accepted_at timestamp without time zone,
+    created_at timestamp without time zone,
+    updated_at timestamp without time zone
+);
+
+
+--
+-- Name: nonviewable_mediaresources_by_userpermission; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW nonviewable_mediaresources_by_userpermission AS
+    SELECT mr.id AS mr_id, users.id AS u_id FROM ((mediaresources mr JOIN mediaresourceuserpermissions mrup ON ((mr.id = mrup.mediaresource_id))) JOIN users ON ((mrup.user_id = users.id))) WHERE (mrup.maynot_view = true);
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -406,22 +430,6 @@ CREATE TABLE usergroups_users (
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE users (
-    id integer NOT NULL,
-    firstname character varying(255),
-    lastname character varying(255),
-    login character varying(40),
-    email character varying(100),
-    usage_terms_accepted_at timestamp without time zone,
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
-);
-
-
---
 -- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -438,6 +446,54 @@ CREATE SEQUENCE users_id_seq
 --
 
 ALTER SEQUENCE users_id_seq OWNED BY users.id;
+
+
+--
+-- Name: viewable_mediaresources_by_grouppermissions; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW viewable_mediaresources_by_grouppermissions AS
+    SELECT mr.id AS mr_id, users.id AS u_id FROM ((((mediaresources mr JOIN mediaresourcegrouppermissions mrgp ON ((mr.id = mrgp.mediaresource_id))) JOIN usergroups ug ON ((ug.id = mrgp.usergroup_id))) JOIN usergroups_users ON ((usergroups_users.usergroup_id = mrgp.usergroup_id))) JOIN users ON ((usergroups_users.user_id = users.id))) WHERE (mrgp.may_view = true);
+
+
+--
+-- Name: viewable_mediaresources_by_gp_without_denied_by_up; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW viewable_mediaresources_by_gp_without_denied_by_up AS
+    SELECT viewable_mediaresources_by_grouppermissions.mr_id, viewable_mediaresources_by_grouppermissions.u_id FROM viewable_mediaresources_by_grouppermissions EXCEPT SELECT nonviewable_mediaresources_by_userpermission.mr_id, nonviewable_mediaresources_by_userpermission.u_id FROM nonviewable_mediaresources_by_userpermission;
+
+
+--
+-- Name: viewable_mediaresources_by_ownwership; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW viewable_mediaresources_by_ownwership AS
+    SELECT mediaresources.id AS mr_id, mediaresources.owner_id AS u_id FROM mediaresources;
+
+
+--
+-- Name: viewable_mediaresources_by_publicpermission; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW viewable_mediaresources_by_publicpermission AS
+    SELECT mr.id AS md_id, users.id AS user_id FROM (mediaresources mr CROSS JOIN users) WHERE (mr.perm_public_may_view = true);
+
+
+--
+-- Name: viewable_mediaresources_by_userpermission; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW viewable_mediaresources_by_userpermission AS
+    SELECT mr.id AS mr_id, users.id AS u_id FROM ((mediaresources mr JOIN mediaresourceuserpermissions mrup ON ((mr.id = mrup.mediaresource_id))) JOIN users ON ((mrup.user_id = users.id))) WHERE (mrup.may_view = true);
+
+
+--
+-- Name: viewable_mediaresources_users; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW viewable_mediaresources_users AS
+    ((SELECT viewable_mediaresources_by_userpermission.mr_id, viewable_mediaresources_by_userpermission.u_id FROM viewable_mediaresources_by_userpermission UNION SELECT viewable_mediaresources_by_gp_without_denied_by_up.mr_id, viewable_mediaresources_by_gp_without_denied_by_up.u_id FROM viewable_mediaresources_by_gp_without_denied_by_up) UNION SELECT viewable_mediaresources_by_publicpermission.md_id AS mr_id, viewable_mediaresources_by_publicpermission.user_id AS u_id FROM viewable_mediaresources_by_publicpermission) UNION SELECT viewable_mediaresources_by_ownwership.mr_id, viewable_mediaresources_by_ownwership.u_id FROM viewable_mediaresources_by_ownwership;
 
 
 --
@@ -628,6 +684,13 @@ CREATE INDEX collectionuserpermissions_user_id_collection_id_idx ON collectionus
 
 
 --
+-- Name: mediaresourcegrouppermissions_may_view_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX mediaresourcegrouppermissions_may_view_idx ON mediaresourcegrouppermissions USING btree (may_view);
+
+
+--
 -- Name: mediaresourcegrouppermissions_mediaresource_id_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -646,6 +709,34 @@ CREATE INDEX mediaresourcegrouppermissions_usergroup_id_idx ON mediaresourcegrou
 --
 
 CREATE INDEX mediaresources_collections_idx ON collections_mediaresources USING btree (mediaresource_id, collection_id);
+
+
+--
+-- Name: mediaresources_owner_id_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX mediaresources_owner_id_idx ON mediaresources USING btree (owner_id);
+
+
+--
+-- Name: mediaresources_perm_public_may_view_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX mediaresources_perm_public_may_view_idx ON mediaresources USING btree (perm_public_may_view);
+
+
+--
+-- Name: mediaresourceuserpermissions_may_view_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX mediaresourceuserpermissions_may_view_idx ON mediaresourceuserpermissions USING btree (may_view);
+
+
+--
+-- Name: mediaresourceuserpermissions_maynot_view_idx; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE INDEX mediaresourceuserpermissions_maynot_view_idx ON mediaresourceuserpermissions USING btree (maynot_view);
 
 
 --
@@ -847,3 +938,5 @@ INSERT INTO schema_migrations (version) VALUES ('20111028111742');
 INSERT INTO schema_migrations (version) VALUES ('20111101122431');
 
 INSERT INTO schema_migrations (version) VALUES ('20111101130715');
+
+INSERT INTO schema_migrations (version) VALUES ('20111104111005');

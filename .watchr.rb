@@ -9,6 +9,10 @@ def growl(message)
 
 end
 
+def run_all
+  system "rake spec"
+end
+
 def run_spec(file)
   unless File.exist?(file)
     puts "#{file} does not exist"
@@ -21,18 +25,21 @@ def run_spec(file)
 end
 
 watch("spec/.*/*_spec.rb") do |match|
-  run_spec match[0]
+  run_all
+  #run_spec match[0]
 end
 
 watch("app/(.*/.*).rb") do |match|
-  run_spec %{spec/#{match[1]}_spec.rb}
+  run_all
+  #run_spec %{spec/#{match[1]}_spec.rb}
 end
 
 watch("lib/.*") do |match|
-  prefix =  ((match.to_s.split "/").last.split ".").first
-  (Dir.glob "spec/**/*_spec.rb").each do |spec|
-    run_spec spec if spec =~ (Regexp.new prefix)
-  end
+  run_all
+#  prefix =  ((match.to_s.split "/").last.split ".").first
+#  (Dir.glob "spec/**/*_spec.rb").each do |spec|
+#    run_spec spec if spec =~ (Regexp.new prefix)
+#  end
 end
 
 
